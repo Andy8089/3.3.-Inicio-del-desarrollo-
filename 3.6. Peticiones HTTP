@@ -1,0 +1,100 @@
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const MaterialApp(
+      home: PokemonPage(),
+      debugShowCheckedModeBanner: false,
+    );
+  }
+}
+
+class PokemonPage extends StatefulWidget {
+  const PokemonPage({super.key});
+
+  @override
+  State<PokemonPage> createState() => _PokemonPageState();
+}
+
+class _PokemonPageState extends State<PokemonPage> {
+  String pokemonName = "pikachu"; // Puedes cambiar el nombre del Pokémon
+  Map<String, dynamic>? pokemonData;
+  bool isLoading = false;
+
+  Future<void> fetchPokemon() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    final url = Uri.parse("https://pokeapi.co/api/v2/pokemon/$pokemonName");
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      setState(() {
+        pokemonData = json.decode(response.body);
+        isLoading = false;
+      });
+    } else {
+      setState(() {
+        pokemonData = null;
+        isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Error al obtener el Pokémon")),
+      );
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    fetchPokemon();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Pokémon: $pokemonName"),
+        backgroundColor: Colors.redAccent,
+      ),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : pokemonData != null
+              ? Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    children: [
+                      Image.network(pokemonData!['sprites']['front_default']),
+                      const SizedBox(height: 20),
+                      Text(
+                        "Nombre: ${pokemonData!['name'].toUpperCase()}",
+                        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 10),
+                      Text("Altura: ${pokemonData!['height']}"),
+                      Text("Peso: ${pokemonData!['weight']}"),
+                      const SizedBox(height: 10),
+                      Text(
+                        "Habilidades:",
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      ...pokemonData!['abilities'].map<Widget>((a) {
+                        return Text("• ${a['ability']['name']}");
+                      }).toList(),
+                    ],
+                  ),
+                )
+              : const Center(child: Text("No se pudo cargar el Pokémon")),
+    );
+  }
+}
