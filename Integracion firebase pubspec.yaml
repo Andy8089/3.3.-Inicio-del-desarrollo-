@@ -1,0 +1,13 @@
+name: firebase_flutter_app
+description: A new Flutter project with Firebase integration.
+
+environment:
+  sdk: ">=3.1.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  firebase_core: ^2.25.4
+
+flutter:
+  uses-material-design: true
